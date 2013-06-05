@@ -12,9 +12,11 @@ namespace Test
     {
         static void Main(string[] args)
         {
-            var image = Image.FromFile("../../../TEST_DATA/04.png");
+            var vinyl = new Vinyl("../../../TEST_DATA/06.png");
 
-            Console.WriteLine(image[900, 140]);
+            Console.WriteLine(vinyl.TrackWidth);
+            Console.WriteLine(vinyl.GapWidth);
+            Console.WriteLine(vinyl.SpinCount);
         }
     }
 }
