@@ -6,7 +6,9 @@ namespace VStepanov.Experiments.Vinyl.Imaging
     public class Image
     {
         #region Fields
-        private int[,] _imageData; 
+        private byte[,] _imageData;
+
+        private Bitmap _sourceImage;
         #endregion
 
         #region Properties
@@ -26,15 +28,17 @@ namespace VStepanov.Experiments.Vinyl.Imaging
             Width = bitmap.Width;
             Height = bitmap.Height;
 
-            _imageData = new int[Width, Height];
+            _imageData = new byte[Width, Height];
 
             for (int x = 0; x < Width; x++)
             {
                 for (int y = 0; y < Height; y++)
                 {
-                    _imageData[x, y] = bitmap.GetPixel(x, y).R;
+                    _imageData[x, y] = bitmap.GetPixel(x, y).G;
                 }
             }
+
+            _sourceImage = bitmap;
         }
 
         /// <summary>
@@ -56,12 +60,22 @@ namespace VStepanov.Experiments.Vinyl.Imaging
         /// <param name="x">X-coordinate</param>
         /// <param name="y">Y-coordinate</param>
         /// <returns>Lightness at [x, y]</returns>
-        public int this[int x, int y]
+        public byte this[int x, int y]
         {
             get
             {
                 return _imageData[x, y]; 
             }
+
+            set
+            {
+                _sourceImage.SetPixel(x, y, Color.FromArgb(255, value, 0, 0));
+            }
+        }
+
+        public void SAVE()
+        {
+            _sourceImage.Save("temp.png");
         }
     }
 }

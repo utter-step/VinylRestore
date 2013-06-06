@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace VStepanov.Experiments.Vinyl.Imaging
 {
@@ -19,11 +15,15 @@ namespace VStepanov.Experiments.Vinyl.Imaging
         public int TrackWidth { get; private set; }
         public int GapWidth { get; private set; }
 
-        public int SpinCount { get; private set; } 
+        public int SpinCount { get; private set; }
+
+        public int MyProperty { get; private set; }
+
+        public TimeSpan Duration { get; private set; }
         #endregion
 
         #region Constructors
-        public Vinyl(string path)
+        public Vinyl(string path, int rotationsPerMinute = 120)
         {
             _recordImage = Image.FromFile(path);
 
@@ -31,6 +31,8 @@ namespace VStepanov.Experiments.Vinyl.Imaging
             GapWidth = ComputeGapWidth(TrackWidth);
 
             SpinCount = (ComputePossibleSpinCount(TrackWidth) + 1) / 2;
+
+            Duration = TimeSpan.FromMinutes(SpinCount / (double)rotationsPerMinute);
         } 
         #endregion
 
@@ -128,7 +130,103 @@ namespace VStepanov.Experiments.Vinyl.Imaging
             }
 
             return count;
-        } 
+        }
+
+        private int FindStartX(int trackWidth)
+        {
+            int xMiddle = _recordImage.Width / 2 - 1;
+            int yMiddle = _recordImage.Height / 2 - 1;
+
+            int currentWidth = 0;
+
+            for (int x = 0; x < _recordImage.Width; x++)
+            {
+                if (_recordImage[x, yMiddle] > MINIMAL_TRACK_LIGHTNESS)
+                {
+                    currentWidth++;
+                }
+
+                else
+                {
+                    currentWidth = 0;
+                }
+
+                if (currentWidth >= trackWidth)
+                {
+                    return x - currentWidth;
+                }
+            }
+
+            throw new ApplicationException("Cannot find the start of a spiral!");
+        }
+
+        /// <summary>
+        /// Assuming we're starting at most right point of inner circle.
+        /// </summary>
+        /// <param name="startX">X-coordinates of a starting point.</param>
+        private int SamplesCount(int startX)
+        {
+            int samples = 0;
+
+            for (int i = 0; i < SpinCount; i++)
+            {
+                samples += ((_recordImage.Width / 2) - 1 - startX) * 4;
+                startX += TrackWidth + GapWidth + 1;
+            }
+
+            return samples;
+        }
         #endregion
+
+        public byte[] ExtractAudioBytes()
+        {
+            int startX = FindStartX(TrackWidth) + TrackWidth / 2;
+
+            int centerX = _recordImage.Width / 2 - 1;
+            int centerY = _recordImage.Height / 2 + 7;
+
+            int approximateSamplesCount = SamplesCount(startX);
+
+            var audio = new byte[approximateSamplesCount];
+
+            double lapRadiusDelta = TrackWidth + GapWidth + 0.9;
+
+            double radius = centerX - startX - 5;
+            centerX -= 4;
+
+            double angle = Math.PI;
+
+            double samplesCount = radius * 4;
+
+            double angleDelta = (Math.PI * 2) / samplesCount;
+            double radiusDelta = (lapRadiusDelta / samplesCount);
+
+            int lapcount = 0;
+
+            for (int i = 0; i < audio.Length; i++)
+            {
+                if (angle < -Math.PI) 
+                {
+                    radius = centerX - startX - ++lapcount * lapRadiusDelta;
+
+                    samplesCount = radius * 4;
+
+                    angleDelta = (Math.PI * 2) / samplesCount;
+                    radiusDelta = lapRadiusDelta / samplesCount;
+
+                    angle = Math.PI;
+                }
+
+                int x = (int)Math.Round(centerX + radius * Math.Cos(angle));
+                int y = (int)Math.Round(centerY + radius * Math.Sin(angle));
+
+                audio[i] = _recordImage[x, y];
+
+                radius -= radiusDelta;
+                angle -= angleDelta;
+            }
+
+            return audio;
+        }
     }
 }
