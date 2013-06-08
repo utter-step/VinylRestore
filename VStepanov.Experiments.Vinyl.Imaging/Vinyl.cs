@@ -7,6 +7,9 @@ namespace VStepanov.Experiments.Vinyl.Imaging
         #region Constants (approximate)
         private const int MINIMAL_TRACK_WIDTH = 3;
         private const int MINIMAL_TRACK_LIGHTNESS = 70;
+
+        private const int MINIMAL_PLATE_LIGHTNESS = 30;
+        private const int TRESHOLD = 40;
         #endregion
 
         #region Fields and properties
@@ -16,8 +19,6 @@ namespace VStepanov.Experiments.Vinyl.Imaging
         public int GapWidth { get; private set; }
 
         public int SpinCount { get; private set; }
-
-        public int MyProperty { get; private set; }
 
         public TimeSpan Duration { get; private set; }
         #endregion
@@ -132,10 +133,98 @@ namespace VStepanov.Experiments.Vinyl.Imaging
             return count;
         }
 
+        public int ComputeCenterX()
+        {
+            int left = 0,
+                right = 0;
+
+            for (int x = 0; x < _recordImage.Width; x++)
+            {
+                int count = 0;
+                for (int y = 0; y < _recordImage.Height; y++)
+                {
+                    if (_recordImage[x, y] > MINIMAL_PLATE_LIGHTNESS)
+                    {
+                        count++;
+                    }   
+                }
+
+                if (count > TRESHOLD)
+                {
+                    left = x;
+                    break;
+                }
+            }
+
+            for (int x = _recordImage.Width - 1; x >= 0; x--)
+            {
+                int count = 0;
+                for (int y = 0; y < _recordImage.Height; y++)
+                {
+                    if (_recordImage[x, y] > MINIMAL_PLATE_LIGHTNESS)
+                    {
+                        count++;
+                    }
+                }
+
+                if (count > TRESHOLD)
+                {
+                    right = x;
+                    break;
+                }
+            }
+
+            return right - (right - left) / 2;
+        }
+
+        public int ComputeCenterY()
+        {
+            int lower = 0,
+                upper = 0;
+
+            for (int y = 0; y < _recordImage.Height; y++)
+            {
+                int count = 0;
+                for (int x = 0; x < _recordImage.Width; x++)
+                {
+                    if (_recordImage[x, y] > MINIMAL_PLATE_LIGHTNESS)
+                    {
+                        count++;
+                    }
+                }
+
+                if (count > TRESHOLD)
+                {
+                    upper = y;
+                    break;
+                }
+            }
+
+            for (int y = _recordImage.Height - 1; y >= 0; y--)
+            {
+                int count = 0;
+                for (int x = 0; x < _recordImage.Width; x++)
+                {
+                    if (_recordImage[x, y] > MINIMAL_PLATE_LIGHTNESS)
+                    {
+                        count++;
+                    }
+                }
+
+                if (count > TRESHOLD)
+                {
+                    lower = y;
+                    break;
+                }
+            }
+
+            return lower - (lower - upper) / 2;
+        }
+
         private int FindStartX(int trackWidth)
         {
-            int xMiddle = _recordImage.Width / 2 - 1;
-            int yMiddle = _recordImage.Height / 2 - 1;
+            int xMiddle = ComputeCenterX();
+            int yMiddle = ComputeCenterY();
 
             int currentWidth = 0;
 
@@ -166,13 +255,7 @@ namespace VStepanov.Experiments.Vinyl.Imaging
         /// <param name="startX">X-coordinates of a starting point.</param>
         private int SamplesCount(int startX)
         {
-            int samples = 0;
-
-            for (int i = 0; i < SpinCount; i++)
-            {
-                samples += ((_recordImage.Width / 2) - 1 - startX) * 4;
-                startX += TrackWidth + GapWidth + 1;
-            }
+            int samples = ((_recordImage.Width / 2) - 1 - startX) * 4 * SpinCount;
 
             return samples;
         }
@@ -182,17 +265,16 @@ namespace VStepanov.Experiments.Vinyl.Imaging
         {
             int startX = FindStartX(TrackWidth) + TrackWidth / 2;
 
-            int centerX = _recordImage.Width / 2 - 1;
-            int centerY = _recordImage.Height / 2 + 7;
+            int centerX = ComputeCenterX();
+            int centerY = ComputeCenterY();
 
             int approximateSamplesCount = SamplesCount(startX);
 
             var audio = new byte[approximateSamplesCount];
 
-            double lapRadiusDelta = TrackWidth + GapWidth + 0.9;
+            double lapRadiusDelta = TrackWidth + GapWidth + 0.85;
 
-            double radius = centerX - startX - 5;
-            centerX -= 4;
+            double radius = centerX - startX - 1;
 
             double angle = Math.PI;
 
@@ -207,12 +289,7 @@ namespace VStepanov.Experiments.Vinyl.Imaging
             {
                 if (angle < -Math.PI) 
                 {
-                    radius = centerX - startX - ++lapcount * lapRadiusDelta;
-
-                    samplesCount = radius * 4;
-
-                    angleDelta = (Math.PI * 2) / samplesCount;
-                    radiusDelta = lapRadiusDelta / samplesCount;
+                    radius = centerX - startX - 1 - ++lapcount * lapRadiusDelta;
 
                     angle = Math.PI;
                 }
@@ -222,9 +299,13 @@ namespace VStepanov.Experiments.Vinyl.Imaging
 
                 audio[i] = _recordImage[x, y];
 
+                _recordImage[x, y] = 255;
+
                 radius -= radiusDelta;
                 angle -= angleDelta;
             }
+
+            _recordImage.SAVE();
 
             return audio;
         }

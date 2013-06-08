@@ -13,7 +13,7 @@ namespace Test
     {
         static void Main(string[] args)
         {
-            var vinyl = new Vinyl("../../../TEST_DATA/04.png");
+            var vinyl = new Vinyl("../../../TEST_DATA/06.png");
 
             Console.WriteLine(vinyl.TrackWidth);
             Console.WriteLine(vinyl.GapWidth);
@@ -29,6 +29,9 @@ namespace Test
             {
                 writer.Write(res, 0, res.Length);
             }
+
+            Console.WriteLine(vinyl.ComputeCenterX());
+            Console.WriteLine(vinyl.ComputeCenterY());
         }
     }
 }
