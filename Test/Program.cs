@@ -15,11 +15,13 @@ namespace Test
         {
             var vinyl = new Vinyl("../../../TEST_DATA/06.png");
 
-            Console.WriteLine(vinyl.TrackWidth);
-            Console.WriteLine(vinyl.GapWidth);
-            Console.WriteLine(vinyl.SpinCount);
+            Console.WriteLine("Center of this plate:\t{0}", vinyl.Center);
 
-            Console.WriteLine(vinyl.Duration);
+            Console.WriteLine("Average width of one track:\t{0}", vinyl.TrackWidth);
+            Console.WriteLine("Average width of one gap:\t{0}", vinyl.GapWidth);
+            Console.WriteLine("Approximate count of spins:\t{0}", vinyl.SpinCount);
+
+            Console.WriteLine("Approximate duration:\t{0}", vinyl.Duration);
 
             var res = vinyl.ExtractAudioBytes();
 
@@ -30,8 +32,9 @@ namespace Test
                 writer.Write(res, 0, res.Length);
             }
 
-            Console.WriteLine(vinyl.ComputeCenterX());
-            Console.WriteLine(vinyl.ComputeCenterY());
+            var play = new Microsoft.VisualBasic.Devices.Audio();
+
+            play.Play("out.wav", Microsoft.VisualBasic.AudioPlayMode.WaitToComplete);
         }
     }
 }
