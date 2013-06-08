@@ -30,13 +30,26 @@ namespace VStepanov.Experiments.Vinyl.Imaging
 
             _imageData = new byte[Width, Height];
 
-            for (int x = 0; x < Width; x++)
+            MemoryStream ms = new MemoryStream();
+            bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
+            byte[] bitmapData = ms.ToArray();
+
+            int offset = bitmapData.Length - Width * Height * 4;
+
+            for (int i = offset, index = 0; i < bitmapData.Length - 4; i += 4, index++)
             {
-                for (int y = 0; y < Height; y++)
-                {
-                    _imageData[x, y] = bitmap.GetPixel(x, y).G;
-                }
+                int x = index % Width;
+                int y = Height - index / Width - 1;
+                _imageData[x, y] = bitmapData[i];
             }
+
+            //for (int x = 0; x < Width; x++)
+            //{
+            //    for (int y = 0; y < Height; y++)
+            //    {
+            //        _imageData[x, y] = bitmap.GetPixel(x, y).G;
+            //    }
+            //}
 
             _sourceImage = bitmap;
         }
@@ -73,9 +86,9 @@ namespace VStepanov.Experiments.Vinyl.Imaging
             }
         }
 
-        public void SAVE()
+        public void SaveTrackWay(string path)
         {
-            _sourceImage.Save("temp.png");
+            _sourceImage.Save(path);
         }
     }
 }

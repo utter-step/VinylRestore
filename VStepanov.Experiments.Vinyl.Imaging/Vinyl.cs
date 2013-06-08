@@ -22,6 +22,12 @@ namespace VStepanov.Experiments.Vinyl.Imaging
 
     public class Vinyl
     {
+        public enum ExtractionOptions
+        {
+            None,
+            SaveTrack
+        }
+
         #region Constants (approximate)
         private const int MINIMAL_TRACK_WIDTH = 3;
         private const int MINIMAL_TRACK_LIGHTNESS = 70;
@@ -104,7 +110,7 @@ namespace VStepanov.Experiments.Vinyl.Imaging
             {
                 if (_recordImage[x, center.Y] < MINIMAL_TRACK_LIGHTNESS)
                 {
-                    if (currentTrackWidth >= trackWidth)
+                    if (currentTrackWidth >= trackWidth - 1)
                     {
                         isGap = true;
                     }
@@ -284,16 +290,14 @@ namespace VStepanov.Experiments.Vinyl.Imaging
         }
         #endregion
 
-        public byte[] ExtractAudioBytes()
+        public byte[] ExtractAudioBytes(ExtractionOptions options, string path="track.png")
         {
             int startX = FindStartX() + (int)(TrackWidth / 2);
 
             int centerX = Center.X;
             int centerY = Center.Y;
 
-            int approximateSamplesCount = SamplesCount(startX);
-
-            var audio = new byte[approximateSamplesCount];
+            var audioBytes = new byte[SamplesCount(startX)];
 
             double lapRadiusDelta = TrackWidth + GapWidth;
 
@@ -309,7 +313,7 @@ namespace VStepanov.Experiments.Vinyl.Imaging
 
             int lapcount = 0;
 
-            for (int i = 0; i < audio.Length; i++)
+            for (int i = 0; i < audioBytes.Length; i++)
             {
                 if (angle < -Math.PI) 
                 {
@@ -321,17 +325,23 @@ namespace VStepanov.Experiments.Vinyl.Imaging
                 int x = (int)Math.Round(centerX + radius * Math.Cos(angle));
                 int y = (int)Math.Round(centerY + radius * Math.Sin(angle));
 
-                audio[i] = _recordImage[x, y];
+                audioBytes[i] = _recordImage[x, y];
 
-                _recordImage[x, y] = 255;
+                if (options == ExtractionOptions.SaveTrack)
+                {
+                    _recordImage[x, y] = 255; 
+                }
 
                 radius -= radiusDelta;
                 angle -= angleDelta;
             }
 
-            _recordImage.SAVE();
+            if (options == ExtractionOptions.SaveTrack)
+            {
+                _recordImage.SaveTrackWay(path); 
+            }
 
-            return audio;
+            return audioBytes;
         }
     }
 }
