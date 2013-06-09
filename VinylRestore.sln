@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VStepanov.Experiments.Vinyl
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VStepanov.Experiments.Vinyl.Audio", "VStepanov.Experiments.Vinyl.Audio\VStepanov.Experiments.Vinyl.Audio.csproj", "{A2BB32F1-7AA4-4CB2-A116-899242A00E02}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VStepanov.Experiments.Vinyl.GUI", "VStepanov.Experiments.Vinyl.GUI\VStepanov.Experiments.Vinyl.GUI.csproj", "{A353B0E8-29D6-4FC6-BB5E-725A3D1B592F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,6 +33,10 @@ Global
 		{A2BB32F1-7AA4-4CB2-A116-899242A00E02}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A2BB32F1-7AA4-4CB2-A116-899242A00E02}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A2BB32F1-7AA4-4CB2-A116-899242A00E02}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A353B0E8-29D6-4FC6-BB5E-725A3D1B592F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A353B0E8-29D6-4FC6-BB5E-725A3D1B592F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A353B0E8-29D6-4FC6-BB5E-725A3D1B592F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A353B0E8-29D6-4FC6-BB5E-725A3D1B592F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

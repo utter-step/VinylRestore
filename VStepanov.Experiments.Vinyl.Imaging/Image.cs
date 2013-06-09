@@ -1,4 +1,6 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing.Imaging;
+using System.Drawing;
 using System.IO;
 
 namespace VStepanov.Experiments.Vinyl.Imaging
@@ -8,7 +10,7 @@ namespace VStepanov.Experiments.Vinyl.Imaging
         #region Fields
         private byte[,] _imageData;
 
-        private Bitmap _trackImage;
+        private Bitmap _originalImage;
         #endregion
 
         #region Properties
@@ -30,7 +32,7 @@ namespace VStepanov.Experiments.Vinyl.Imaging
 
             InitializeImageData(bitmap);
 
-            _trackImage = bitmap;
+            _originalImage = bitmap;
         }
 
         /// <summary>
@@ -52,10 +54,12 @@ namespace VStepanov.Experiments.Vinyl.Imaging
 
             _imageData = new byte[Width, Height];
 
-            int offset = bitmapData.Length - Width * Height * 4;
+            int bytesPerPixel = BytesPerPixel(bitmap.PixelFormat);
+
+            int offset = bitmapData.Length - Width * Height * bytesPerPixel;
             int height = Height - 1;
 
-            for (int i = offset, index = 0; i < bitmapData.Length - 4; i += 4, index++)
+            for (int i = offset, index = 0; i < bitmapData.Length - bytesPerPixel; i += bytesPerPixel, index++)
             {
                 int x = index % Width;
                 int y = height - index / Width;
@@ -66,10 +70,39 @@ namespace VStepanov.Experiments.Vinyl.Imaging
         private static byte[] BitmapToByteArray(Bitmap bitmap)
         {
             var ms = new MemoryStream();
-            bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
+            bitmap.Save(ms, ImageFormat.Bmp);
 
             byte[] bitmapData = ms.ToArray();
             return bitmapData;
+        }
+
+        private static int BytesPerPixel(PixelFormat pixelFormat)
+        {
+            switch (pixelFormat)
+            {
+                case PixelFormat.Alpha:
+                case PixelFormat.Format8bppIndexed:
+                case PixelFormat.PAlpha:
+                    return 1;
+
+                case PixelFormat.Format16bppArgb1555:
+                case PixelFormat.Format16bppGrayScale:
+                case PixelFormat.Format16bppRgb555:
+                case PixelFormat.Format16bppRgb565:
+                    return 2;
+
+                case PixelFormat.Format24bppRgb:
+                    return 3;
+
+                case PixelFormat.Format32bppArgb:
+                case PixelFormat.Format32bppPArgb:
+                case PixelFormat.Format32bppRgb:
+                case PixelFormat.Canonical:
+                    return 4;
+
+                default:
+                    throw new NotImplementedException("Using unknown pixel format.");
+            }
         }
         #endregion
         #endregion
@@ -86,16 +119,14 @@ namespace VStepanov.Experiments.Vinyl.Imaging
             {
                 return _imageData[x, y]; 
             }
-
-            set
-            {
-                _trackImage.SetPixel(x, y, Color.FromArgb(255, value, 0, 0));
-            }
         }
 
-        public Bitmap GetTrack()
+        public Bitmap GetOriginal()
         {
-            return _trackImage;
+            var wholeImageRectangle = new Rectangle(new System.Drawing.Point(), _originalImage.Size);
+
+            var copy = _originalImage.Clone(wholeImageRectangle, _originalImage.PixelFormat);
+            return copy;
         }
     }
 }

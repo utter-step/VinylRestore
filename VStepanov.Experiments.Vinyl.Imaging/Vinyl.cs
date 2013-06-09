@@ -1,7 +1,31 @@
 ﻿using System;
+using System.Drawing;
+using System.Runtime.Serialization;
 
 namespace VStepanov.Experiments.Vinyl.Imaging
 {
+    [Serializable]
+    public class NotTrackedException : Exception
+    {
+        public NotTrackedException()
+        {
+        }
+
+        public NotTrackedException(string message) : base(message)
+        {
+        }
+
+        public NotTrackedException(string message, Exception inner) : base(message, inner)
+        {
+        }
+
+        protected NotTrackedException(
+            SerializationInfo info,
+            StreamingContext context) : base(info, context)
+        {
+        }
+    }
+
     public struct Point
     {
         public int X { get; private set; }
@@ -18,6 +42,13 @@ namespace VStepanov.Experiments.Vinyl.Imaging
         {
             return String.Format("({0};{1})", X, Y);
         }
+    }
+
+    public struct ExtractionParameters
+    {
+        public Point Center { get; set; }
+        public double TrackWidth { get; set; }
+        public double GapWidth { get; set; }
     }
 
     public class Vinyl
@@ -49,7 +80,8 @@ namespace VStepanov.Experiments.Vinyl.Imaging
 
         public Point Center { get; private set; }
 
-        private bool _trackedExtraction;
+        private bool _trackedLastExtraction;
+        private Bitmap _trackBitmap;
         #endregion
 
         #region Constructors
@@ -66,6 +98,81 @@ namespace VStepanov.Experiments.Vinyl.Imaging
 
             Duration = TimeSpan.FromMinutes(SpinCount / (double)rotationsPerMinute);
         } 
+        #endregion
+
+        #region Audio extraction
+        public static byte[] ExtractAudioBytes(Vinyl vinyl, ExtractionOptions options)
+        {
+            var parameters = new ExtractionParameters
+            {
+                Center = vinyl.Center,
+                GapWidth = vinyl.GapWidth,
+                TrackWidth = vinyl.TrackWidth
+            };
+
+            return ExtractAudioBytes(vinyl, parameters, options);
+        }
+
+        public static byte[] ExtractAudioBytes(Vinyl vinyl, ExtractionParameters parameters, ExtractionOptions options)
+        {
+            int startX = vinyl.FindStartX(parameters.Center);
+
+            vinyl._trackedLastExtraction = options.HasFlag(ExtractionOptions.SaveTrack);
+
+            if (vinyl._trackedLastExtraction)
+            {
+                vinyl._trackBitmap = vinyl._recordImage.GetOriginal();
+            }
+
+            int centerX = parameters.Center.X;
+            int centerY = parameters.Center.Y;
+
+            if (vinyl._trackedLastExtraction)
+            {
+                vinyl.MarkTrack(centerX, centerY, Color.Red);
+            }
+
+            var audioBytes = new byte[vinyl.SamplesCount(startX)];
+
+            double lapRadiusDelta = parameters.TrackWidth + parameters.GapWidth;
+
+            double outerRadius = centerX - startX - (int)(vinyl.TrackWidth / 2);
+            double radius = outerRadius;
+
+            double angle = Math.PI;
+
+            double samplesCount = radius * 4;
+
+            double angleDelta = (Math.PI * 2) / samplesCount;
+            double radiusDelta = (lapRadiusDelta / samplesCount);
+
+            int lapcount = 0;
+
+            for (int i = 0; i < audioBytes.Length; i++)
+            {
+                if (angle < -Math.PI)
+                {
+                    radius = outerRadius - ++lapcount * lapRadiusDelta;
+
+                    angle = Math.PI;
+                }
+
+                int x = (int)Math.Round(centerX + radius * Math.Cos(angle));
+                int y = (int)Math.Round(centerY + radius * Math.Sin(angle));
+
+                audioBytes[i] = vinyl._recordImage[x, y];
+
+                if (vinyl._trackedLastExtraction)
+                {
+                    vinyl.MarkTrack(x, y, Color.Red);
+                }
+
+                radius -= radiusDelta;
+                angle -= angleDelta;
+            }
+
+            return audioBytes;
+        }
         #endregion
 
         #region Helper methods
@@ -256,13 +363,13 @@ namespace VStepanov.Experiments.Vinyl.Imaging
             return lower - (lower - upper) / 2;
         }
 
-        private int FindStartX()
+        private int FindStartX(Point center)
         {
             int currentWidth = 0;
 
             for (int x = 0; x < _recordImage.Width; x++)
             {
-                if (_recordImage[x, Center.Y] > MINIMAL_TRACK_LIGHTNESS)
+                if (_recordImage[x, center.Y] > MINIMAL_TRACK_LIGHTNESS)
                 {
                     currentWidth++;
                 }
@@ -293,60 +400,25 @@ namespace VStepanov.Experiments.Vinyl.Imaging
         }
         #endregion
 
-        public byte[] ExtractAudioBytes(ExtractionOptions options, string path="track.png")
+        #region Access to track and to original images
+        private void MarkTrack(int x, int y, Color color)
         {
-            int startX = FindStartX();
-
-            _trackedExtraction = options.HasFlag(ExtractionOptions.SaveTrack);
-
-            int centerX = Center.X;
-            int centerY = Center.Y;
-
-            var audioBytes = new byte[SamplesCount(startX)];
-
-            double lapRadiusDelta = TrackWidth + GapWidth;
-
-            double outerRadius = centerX - startX - (int)(TrackWidth / 2);
-            double radius = outerRadius;
-
-            double angle = Math.PI;
-
-            double samplesCount = radius * 4;
-
-            double angleDelta = (Math.PI * 2) / samplesCount;
-            double radiusDelta = (lapRadiusDelta / samplesCount);
-
-            int lapcount = 0;
-
-            for (int i = 0; i < audioBytes.Length; i++)
-            {
-                if (angle < -Math.PI) 
-                {
-                    radius = outerRadius - ++lapcount * lapRadiusDelta;
-
-                    angle = Math.PI;
-                }
-
-                int x = (int)Math.Round(centerX + radius * Math.Cos(angle));
-                int y = (int)Math.Round(centerY + radius * Math.Sin(angle));
-
-                audioBytes[i] = _recordImage[x, y];
-
-                if (_trackedExtraction)
-                {
-                    _recordImage[x, y] = 255; 
-                }
-
-                radius -= radiusDelta;
-                angle -= angleDelta;
-            }
-
-            if (_trackedExtraction)
-            {
-                _recordImage.GetTrack().Save(path);
-            }
-
-            return audioBytes;
+            _trackBitmap.SetPixel(x, y, color);
         }
+
+        public Bitmap GetTrack()
+        {
+            if (_trackedLastExtraction)
+            {
+                return _trackBitmap;
+            }
+            throw new NotTrackedException("No saved extraction track presents. Try extracting with ExtractionOptions.SaveTrack");
+        }
+
+        public Bitmap GetOriginal()
+        {
+            return _recordImage.GetOriginal();
+        } 
+        #endregion
     }
 }

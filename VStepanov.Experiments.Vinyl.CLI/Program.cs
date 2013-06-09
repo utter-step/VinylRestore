@@ -19,11 +19,12 @@ namespace VStepanov.Experiments.Vinyl.CLI
 
             if (args.Length < 2)
             {
-                res = vinyl.ExtractAudioBytes(Imaging.Vinyl.ExtractionOptions.None);
+                res = Imaging.Vinyl.ExtractAudioBytes(vinyl, Imaging.Vinyl.ExtractionOptions.None);
             }
             else
             {
-                res = vinyl.ExtractAudioBytes(Imaging.Vinyl.ExtractionOptions.SaveTrack, args[1]);
+                res = Imaging.Vinyl.ExtractAudioBytes(vinyl, Imaging.Vinyl.ExtractionOptions.SaveTrack);
+                vinyl.GetTrack().Save(args[1]);
             }
             stopwatch.Stop();
 

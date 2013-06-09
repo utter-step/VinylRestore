@@ -18,11 +18,11 @@ namespace Test
 
             if (args.Length < 2)
             {
-                res = vinyl.ExtractAudioBytes(Vinyl.ExtractionOptions.None);
+                res = Vinyl.ExtractAudioBytes(vinyl, Vinyl.ExtractionOptions.None);
             }
             else
             {
-                res = vinyl.ExtractAudioBytes(Vinyl.ExtractionOptions.SaveTrack, args[1]);
+                res = Vinyl.ExtractAudioBytes(vinyl, Vinyl.ExtractionOptions.SaveTrack);
             }
 
             stopwatch.Stop();
