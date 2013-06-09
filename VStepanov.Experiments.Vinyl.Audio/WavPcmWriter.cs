@@ -54,14 +54,12 @@ namespace VStepanov.Experiments.Vinyl.Audio
         {
             private uint sGroupID;
             private uint dwChunkSize;
-            private byte[] _data;
 
             public PcmDataChunk(byte[] data)
                 : this()
             {
                 sGroupID = 0x61746164U;
                 dwChunkSize = (uint)data.Length;
-                _data = data;
             }
         } 
         #endregion
@@ -97,7 +95,7 @@ namespace VStepanov.Experiments.Vinyl.Audio
             var formatBytes = GetBytes(_formatChunk);
             var dataBytes = GetBytes(dataChunk);
 
-            var fileHeader = new WavPcmHeader((uint)(formatBytes.Length + dataBytes.Length + sizeof(uint)));
+            var fileHeader = new WavPcmHeader((uint)(formatBytes.Length + dataBytes.Length + data.Length + sizeof(uint)));
             var fileHeaderBytes = GetBytes(fileHeader);
 
             _FileStream.Seek(offset, SeekOrigin.Current);
@@ -105,6 +103,7 @@ namespace VStepanov.Experiments.Vinyl.Audio
             _FileStream.Write(fileHeaderBytes, 0, fileHeaderBytes.Length);
             _FileStream.Write(formatBytes, 0, formatBytes.Length);
             _FileStream.Write(dataBytes, 0, dataBytes.Length);
+            _FileStream.Write(data, 0, data.Length);
 
             _FileStream.Flush();
         }
