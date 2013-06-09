@@ -19,7 +19,7 @@ namespace VStepanov.Experiments.Vinyl.CLI
 
             if (args.Length < 2)
             {
-                res = Imaging.Vinyl.ExtractAudioBytes(vinyl, Imaging.Vinyl.ExtractionOptions.None);
+                res = Imaging.Vinyl.ExtractAudioBytes(vinyl);
             }
             else
             {

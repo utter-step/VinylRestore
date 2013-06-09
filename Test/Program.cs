@@ -18,7 +18,7 @@ namespace Test
 
             if (args.Length < 2)
             {
-                res = Vinyl.ExtractAudioBytes(vinyl, Vinyl.ExtractionOptions.None);
+                res = Vinyl.ExtractAudioBytes(vinyl);
             }
             else
             {

@@ -101,6 +101,11 @@ namespace VStepanov.Experiments.Vinyl.Imaging
         #endregion
 
         #region Audio extraction
+        public static byte[] ExtractAudioBytes(Vinyl vinyl)
+        {
+            return ExtractAudioBytes(vinyl, ExtractionOptions.None);
+        }
+        
         public static byte[] ExtractAudioBytes(Vinyl vinyl, ExtractionOptions options)
         {
             var parameters = new ExtractionParameters
