@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using VStepanov.Experiments.Vinyl.Audio;
-using VStepanov.Experiments.Vinyl.Imaging;
 
 namespace VStepanov.Experiments.Vinyl.CLI
 {

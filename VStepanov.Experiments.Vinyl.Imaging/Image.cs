@@ -1,6 +1,5 @@
 ﻿using System.Drawing;
 using System.IO;
-using System.Threading.Tasks;
 
 namespace VStepanov.Experiments.Vinyl.Imaging
 {

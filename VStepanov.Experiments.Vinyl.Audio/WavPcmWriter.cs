@@ -98,14 +98,14 @@ namespace VStepanov.Experiments.Vinyl.Audio
             var fileHeader = new WavPcmHeader((uint)(formatBytes.Length + dataBytes.Length + data.Length + sizeof(uint)));
             var fileHeaderBytes = GetBytes(fileHeader);
 
-            _FileStream.Seek(offset, SeekOrigin.Current);
+            FileStream.Seek(offset, SeekOrigin.Current);
 
-            _FileStream.Write(fileHeaderBytes, 0, fileHeaderBytes.Length);
-            _FileStream.Write(formatBytes, 0, formatBytes.Length);
-            _FileStream.Write(dataBytes, 0, dataBytes.Length);
-            _FileStream.Write(data, 0, data.Length);
+            FileStream.Write(fileHeaderBytes, 0, fileHeaderBytes.Length);
+            FileStream.Write(formatBytes, 0, formatBytes.Length);
+            FileStream.Write(dataBytes, 0, dataBytes.Length);
+            FileStream.Write(data, 0, data.Length);
 
-            _FileStream.Flush();
+            FileStream.Flush();
         }
     }
 }
