@@ -36,14 +36,12 @@ namespace Test
             Console.WriteLine("Approximate duration:\t{0}", vinyl.Duration);
 
             Console.WriteLine("\nAll computations took {0} ms.", stopwatch.ElapsedMilliseconds);
-
-            var format = new WaveFormat(res.Length / vinyl.Duration.Seconds, 8, 1);
-
+            
             var outputFilename = String.Format("{0}.wav", args[0]);
 
-            using (var writer = new WaveFileWriter(outputFilename, format))
+            using (var writer = new WavPcmWriter(res.Length / vinyl.Duration.Seconds, 8, 1, outputFilename))
             {
-                writer.Write(res, 0, res.Length);
+                writer.Write(res, 0);
             }
 
             var play = new Microsoft.VisualBasic.Devices.Audio();

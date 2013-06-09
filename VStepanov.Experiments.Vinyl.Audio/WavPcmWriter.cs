@@ -68,7 +68,8 @@ namespace VStepanov.Experiments.Vinyl.Audio
 
         private readonly PcmFormatChunk _formatChunk;
 
-        public WavPcmWriter(int sampleRate, int bitsPerSample, int nOfChannels)
+        public WavPcmWriter(int sampleRate, int bitsPerSample, int nOfChannels, string path)
+            : base(path)
         {
             _formatChunk = new PcmFormatChunk(
                 (ushort)nOfChannels,
@@ -89,7 +90,7 @@ namespace VStepanov.Experiments.Vinyl.Audio
             return arr;
         }
 
-        public override void Write(byte[] data, string path)
+        public override void Write(byte[] data, int offset)
         {
             var dataChunk = new PcmDataChunk(data);
 
@@ -99,18 +100,11 @@ namespace VStepanov.Experiments.Vinyl.Audio
             var fileHeader = new WavPcmHeader((uint)(formatBytes.Length + dataBytes.Length + sizeof(uint)));
             var fileHeaderBytes = GetBytes(fileHeader);
 
-            using (var stream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.Write))
-            {
-                stream.Write(fileHeaderBytes, 0, fileHeaderBytes.Length);
-                stream.Write(formatBytes, 0, formatBytes.Length);
-                stream.Write(dataBytes, 0, dataBytes.Length);
+            _FileStream.Seek(offset);
 
-                stream.Close();
-            }
-        }
-
-        public override void Dispose()
-        {
+            _FileStream.Write(fileHeaderBytes, 0, fileHeaderBytes.Length);
+            _FileStream.Write(formatBytes, 0, formatBytes.Length);
+            _FileStream.Write(dataBytes, 0, dataBytes.Length);
         }
     }
 }
