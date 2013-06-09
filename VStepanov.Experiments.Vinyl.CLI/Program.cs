@@ -1,33 +1,36 @@
 ﻿using System;
 using System.Diagnostics;
-
 using VStepanov.Experiments.Vinyl.Audio;
 using VStepanov.Experiments.Vinyl.Imaging;
 
-namespace Test
+namespace VStepanov.Experiments.Vinyl.CLI
 {
     class Program
     {
         static void Main(string[] args)
         {
             var stopwatch = new Stopwatch();
+
+            Console.WriteLine("Recovering...");
+
             stopwatch.Start();
-            var vinyl = new Vinyl(args[0]);
+            var vinyl = new Imaging.Vinyl(args[0]);
 
             byte[] res;
 
             if (args.Length < 2)
             {
-                res = vinyl.ExtractAudioBytes(Vinyl.ExtractionOptions.None);
+                res = vinyl.ExtractAudioBytes(Imaging.Vinyl.ExtractionOptions.None);
             }
             else
             {
-                res = vinyl.ExtractAudioBytes(Vinyl.ExtractionOptions.SaveTrack, args[1]);
+                res = vinyl.ExtractAudioBytes(Imaging.Vinyl.ExtractionOptions.SaveTrack, args[1]);
             }
-
             stopwatch.Stop();
 
-            Console.WriteLine("Center of this plate:\t{0}", vinyl.Center);
+            Console.WriteLine("Recovered in {0} ms.", stopwatch.ElapsedMilliseconds);
+
+            Console.WriteLine("\nCenter of this plate:\t{0}", vinyl.Center);
 
             Console.WriteLine("Average width of one track:\t{0:f3}", vinyl.TrackWidth);
             Console.WriteLine("Average width of one gap:\t{0:f3}", vinyl.GapWidth);
@@ -35,20 +38,18 @@ namespace Test
 
             Console.WriteLine("Approximate duration:\t{0}", vinyl.Duration);
 
-            Console.WriteLine("\nAll computations took {0} ms.", stopwatch.ElapsedMilliseconds);
+            Console.WriteLine("\nSaving...");
 
-            var format = new WaveFormat(res.Length / vinyl.Duration.Seconds, 8, 1);
-
+            stopwatch.Restart();
             var outputFilename = String.Format("{0}.wav", args[0]);
 
-            using (var writer = new WaveFileWriter(outputFilename, format))
+            using (var writer = new WavPcmWriter(res.Length / vinyl.Duration.Seconds, 8, 1))
             {
-                writer.Write(res, 0, res.Length);
+                writer.Write(res, outputFilename);
             }
+            stopwatch.Stop();
 
-            var play = new Microsoft.VisualBasic.Devices.Audio();
-
-            play.Play(outputFilename, Microsoft.VisualBasic.AudioPlayMode.WaitToComplete);
+            Console.WriteLine("\nSaved in {0} ms.", stopwatch.ElapsedMilliseconds);
         }
     }
 }

@@ -22,6 +22,7 @@ namespace VStepanov.Experiments.Vinyl.Imaging
 
     public class Vinyl
     {
+        [Flags]
         public enum ExtractionOptions
         {
             None,
@@ -37,7 +38,7 @@ namespace VStepanov.Experiments.Vinyl.Imaging
         #endregion
 
         #region Fields and properties
-        private Image _recordImage;
+        private readonly Image _recordImage;
 
         public double TrackWidth { get; private set; }
         public double GapWidth { get; private set; }
@@ -47,6 +48,8 @@ namespace VStepanov.Experiments.Vinyl.Imaging
         public TimeSpan Duration { get; private set; }
 
         public Point Center { get; private set; }
+
+        private bool _trackedExtraction;
         #endregion
 
         #region Constructors
@@ -292,7 +295,9 @@ namespace VStepanov.Experiments.Vinyl.Imaging
 
         public byte[] ExtractAudioBytes(ExtractionOptions options, string path="track.png")
         {
-            int startX = FindStartX() + (int)(TrackWidth / 2);
+            int startX = FindStartX();
+
+            _trackedExtraction = options.HasFlag(ExtractionOptions.SaveTrack);
 
             int centerX = Center.X;
             int centerY = Center.Y;
@@ -301,7 +306,7 @@ namespace VStepanov.Experiments.Vinyl.Imaging
 
             double lapRadiusDelta = TrackWidth + GapWidth;
 
-            double outerRadius = centerX - startX;
+            double outerRadius = centerX - startX - (int)(TrackWidth / 2);
             double radius = outerRadius;
 
             double angle = Math.PI;
@@ -327,7 +332,7 @@ namespace VStepanov.Experiments.Vinyl.Imaging
 
                 audioBytes[i] = _recordImage[x, y];
 
-                if (options == ExtractionOptions.SaveTrack)
+                if (_trackedExtraction)
                 {
                     _recordImage[x, y] = 255; 
                 }
@@ -336,9 +341,9 @@ namespace VStepanov.Experiments.Vinyl.Imaging
                 angle -= angleDelta;
             }
 
-            if (options == ExtractionOptions.SaveTrack)
+            if (_trackedExtraction)
             {
-                _recordImage.SaveTrackWay(path); 
+                _recordImage.GetTrack().Save(path);
             }
 
             return audioBytes;

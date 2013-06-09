@@ -1,5 +1,6 @@
 ﻿using System.Drawing;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace VStepanov.Experiments.Vinyl.Imaging
 {
@@ -8,7 +9,7 @@ namespace VStepanov.Experiments.Vinyl.Imaging
         #region Fields
         private byte[,] _imageData;
 
-        private Bitmap _sourceImage;
+        private Bitmap _trackImage;
         #endregion
 
         #region Properties
@@ -28,30 +29,9 @@ namespace VStepanov.Experiments.Vinyl.Imaging
             Width = bitmap.Width;
             Height = bitmap.Height;
 
-            _imageData = new byte[Width, Height];
+            InitializeImageData(bitmap);
 
-            MemoryStream ms = new MemoryStream();
-            bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
-            byte[] bitmapData = ms.ToArray();
-
-            int offset = bitmapData.Length - Width * Height * 4;
-
-            for (int i = offset, index = 0; i < bitmapData.Length - 4; i += 4, index++)
-            {
-                int x = index % Width;
-                int y = Height - index / Width - 1;
-                _imageData[x, y] = bitmapData[i];
-            }
-
-            //for (int x = 0; x < Width; x++)
-            //{
-            //    for (int y = 0; y < Height; y++)
-            //    {
-            //        _imageData[x, y] = bitmap.GetPixel(x, y).G;
-            //    }
-            //}
-
-            _sourceImage = bitmap;
+            _trackImage = bitmap;
         }
 
         /// <summary>
@@ -64,7 +44,35 @@ namespace VStepanov.Experiments.Vinyl.Imaging
             var bitmap = new Bitmap(path);
 
             return new Image(bitmap);
-        } 
+        }
+
+        #region Constructor's helper methods
+        private void InitializeImageData(Bitmap bitmap)
+        {
+            var bitmapData = BitmapToByteArray(bitmap);
+
+            _imageData = new byte[Width, Height];
+
+            int offset = bitmapData.Length - Width * Height * 4;
+            int height = Height - 1;
+
+            for (int i = offset, index = 0; i < bitmapData.Length - 4; i += 4, index++)
+            {
+                int x = index % Width;
+                int y = height - index / Width;
+                _imageData[x, y] = bitmapData[i];
+            }
+        }
+
+        private static byte[] BitmapToByteArray(Bitmap bitmap)
+        {
+            var ms = new MemoryStream();
+            bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
+
+            byte[] bitmapData = ms.ToArray();
+            return bitmapData;
+        }
+        #endregion
         #endregion
 
         /// <summary>
@@ -82,13 +90,13 @@ namespace VStepanov.Experiments.Vinyl.Imaging
 
             set
             {
-                _sourceImage.SetPixel(x, y, Color.FromArgb(255, value, 0, 0));
+                _trackImage.SetPixel(x, y, Color.FromArgb(255, value, 0, 0));
             }
         }
 
-        public void SaveTrackWay(string path)
+        public Bitmap GetTrack()
         {
-            _sourceImage.Save(path);
+            return _trackImage;
         }
     }
 }
