@@ -83,7 +83,7 @@ namespace VStepanov.Experiments.Vinyl.Audio
             var arr = new byte[size];
             var ptr = Marshal.AllocHGlobal(size);
 
-            Marshal.StructureToPtr(@struct, ptr, true);
+            Marshal.StructureToPtr(@struct, ptr, false);
             Marshal.Copy(ptr, arr, 0, size);
             Marshal.FreeHGlobal(ptr);
 
@@ -100,11 +100,13 @@ namespace VStepanov.Experiments.Vinyl.Audio
             var fileHeader = new WavPcmHeader((uint)(formatBytes.Length + dataBytes.Length + sizeof(uint)));
             var fileHeaderBytes = GetBytes(fileHeader);
 
-            _FileStream.Seek(offset);
+            _FileStream.Seek(offset, SeekOrigin.Current);
 
             _FileStream.Write(fileHeaderBytes, 0, fileHeaderBytes.Length);
             _FileStream.Write(formatBytes, 0, formatBytes.Length);
             _FileStream.Write(dataBytes, 0, dataBytes.Length);
+
+            _FileStream.Flush();
         }
     }
 }

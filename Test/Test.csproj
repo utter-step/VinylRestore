@@ -33,9 +33,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.VisualBasic" />
-    <Reference Include="NAudio">
-      <HintPath>..\packages\NAudio.1.6\lib\net20\NAudio.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -51,9 +48,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\VStepanov.Experiments.Vinyl.Audio\VStepanov.Experiments.Vinyl.Audio.csproj">
+      <Project>{a2bb32f1-7aa4-4cb2-a116-899242a00e02}</Project>
+      <Name>VStepanov.Experiments.Vinyl.Audio</Name>
+    </ProjectReference>
     <ProjectReference Include="..\VStepanov.Experiments.Vinyl.Imaging\VStepanov.Experiments.Vinyl.Imaging.csproj">
       <Project>{a46e1ef5-6ca9-4ebf-9501-39aa7ad38a87}</Project>
       <Name>VStepanov.Experiments.Vinyl.Imaging</Name>

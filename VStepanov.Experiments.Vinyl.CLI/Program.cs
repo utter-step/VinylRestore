@@ -43,13 +43,13 @@ namespace VStepanov.Experiments.Vinyl.CLI
             stopwatch.Restart();
             var outputFilename = String.Format("{0}.wav", args[0]);
 
-            using (var writer = new WavPcmWriter(res.Length / vinyl.Duration.Seconds, 8, 1))
+            using (var writer = new WavPcmWriter(res.Length / vinyl.Duration.Seconds, 8, 1, outputFilename))
             {
-                writer.Write(res, outputFilename);
+                writer.Write(res, 0);
             }
             stopwatch.Stop();
 
-            Console.WriteLine("\nSaved in {0} ms.", stopwatch.ElapsedMilliseconds);
+            Console.WriteLine("Saved in {0} ms.", stopwatch.ElapsedMilliseconds);
         }
     }
 }
